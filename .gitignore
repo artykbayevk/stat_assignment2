@@ -1,2 +1,4 @@
 .Rproj.user
 *html
+.Rhistory
+.DS_store

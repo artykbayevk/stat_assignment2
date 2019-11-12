@@ -27,9 +27,7 @@ df <- df[-which(df$ash %in% outliers),]
 
 
 ggqqplot(df$ash)
-ggdensity(df$ash, 
-          main = "Density plot of ash",
-          xlab = "Alcohol %")
+ggdensity(df$ash, main = "Density plot of ash",xlab = "Alcohol %")
 
 
 shapiro.test(df$ash)
@@ -45,3 +43,48 @@ ggdensity(df$new, main = "Density plot of Alcohol",xlab = "Alcohol %")
 
 shapiro.test(df$new)
 ks.test(df$new, "pnorm", mean(df$new), sd(df$new))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

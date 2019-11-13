@@ -7,10 +7,12 @@ library("ggpubr")
 library("car")
 library("corrplot")
 library("psych")
-library("MVN")
+library("MVN") ## only on windows
 library("perturb")
 library("caret")
 library("olsrr")
+library("tidyverse")
+library("broom")
 
 #%% reading datasets
 df1 <- read.csv("data/winequality-red.csv", header = TRUE, sep = ";")
@@ -22,107 +24,79 @@ summary(df1)
 summary(df2)
 summary(df)
 
-### we know that there are multiple linear regression. 
-# we need to check many assumptions, that have to be done for MLR analysis
-# 1st - Linear Relation ship between variables
-# 2nd - Multivariate Normality
-# 3rd - No Multicollinearity
-# 4th - Homoscedasticity
+## creating simple dataset for linear regression
+data <- data.frame("alcohol" = df1$ph, "quality" = df1$quality)
 
-## normality checking
-res<- mvn(df1, univariateTest = "SW", univariatePlot = "histogram")
-res<- mvn(df1, univariateTest = "SW", univariatePlot = "qqplot")
-res<- mvn(df1, univariateTest = "SW", univariatePlot = "scatter")
+## checking normality between this variables
+boxplot(data$alcohol)
+boxplot(data$quality)
 
-## transforming whole dataset
-tr_df1 <- sqrt(df1)
+# checking normality in alcohol
+qqnorm(data$alcohol)
+ggqqplot(data$alcohol)
+ggdensity(data$alcohol, main = "Density plot of Alcohol",xlab = "Alcohol %")
+hist(data$alcohol)
 
+# checking normality in quality
+qqnorm(data$quality)
+ggqqplot(data$quality)
+ggdensity(data$quality, main = "Density plot of Quality",xlab = "Alcohol %")
+hist(data$quality)
 
+# transformation data
+tr_data <- sqrt(data)
 
-new_res <- mvn(tr_df1, univariateTest = "SW", univariatePlot = "histogram")
+## checking normality between this variables on transformed data
+boxplot(tr_data$alcohol)
+boxplot(tr_data$quality)
 
+# checking normality in alcohol on transformed data
+qqnorm(tr_data$alcohol)
+ggqqplot(tr_data$alcohol)
+ggdensity(tr_data$alcohol, main = "Density plot of Alcohol",xlab = "Alcohol %")
+hist(tr_data$alcohol)
 
+# checking normality in quality on transformed data
+qqnorm(tr_data$quality)
+ggqqplot(tr_data$quality)
+ggdensity(tr_data$quality, main = "Density plot of Quality",xlab = "Alcohol %")
+hist(tr_data$quality)
 
-## all data not normally distr. by the reason of not normal distr of data, we choose spearman analysis
-corrplot(cor(df1,method = "spearman"))
-pairs.panels(df1)
+### quality doesnt need to transform
+tr_data$quality <- data$quality
 
-corrplot(cor(tr_df1,method = "spearman"))
-pairs.panels(tr_df1)
+ks.test(tr_data$alcohol, rnorm(nrow(tr_data)))
+ks.test(tr_data$quality, rnorm(nrow(tr_data)))
 
-# removing correlated independent variables for avoiding multicollinearity
-tr_df1 <-sqrt(df1)
-tr_df1 <-select(tr_df1, -fixed.acidity)
-tr_df1 <-select(tr_df1, -citric.acid)
-tr_df1 <-select(tr_df1, -total.sulfur.dioxide)
-tr_df1 <-select(tr_df1, -density)
-tr_df1 <-select(tr_df1, -sulphates)
-corrplot(cor(tr_df1,method = "spearman"))
+## correlation test
+res <- cor.test(tr_data$quality, tr_data$alcohol, method = "spearman", exact = F)
+res$estimate
 
+res_squared <- res$estimate^2
+res_squared
 
-corrplot.mixed(cor(tr_df1,method = "spearman"), lower = "number")
+## data see that this correlation not so good
+plot(tr_data$quality~tr_data$alcohol)
 
-
-# other assumption for multicollinearity
-colldiag(full)
-colldiag(reduced1)
-vif(reduced1)
-vif(full)
-ols_vif_tol(reduced1)
-ols_test_correlation(reduced1)
-ols_coll_diag(reduced1)
-## constructing multiple linear regression
-
-
-
-full <- lm(formula = quality~alcohol+pH+free.sulfur.dioxide+chlorides+residual.sugar+volatile.acidity, data = tr_df1)
-reduced1 <- lm(formula = quality~alcohol+chlorides+volatile.acidity, data=tr_df1)
-
-summary(full)
-summary(reduced1)
-
-confint(full, conf.level=0.95)
-
-anova(reduced1, full)
-
-RSS <- c(crossprod(model1$residuals))
-MSE <- RSS / length(model1$residuals)
-RMSE <- sqrt(MSE)
-RMSE
-res_ <- model$residualse
+# working with the model
+model <- lm(formula = quality ~ alcohol, data = tr_data)
+summary(model)
 
 
+model.diag.metrics <- augment(model)
+head(model.diag.metrics)
 
 
+# plot residuals
+ggplot(model.diag.metrics, aes(alcohol, quality)) +
+  geom_point() +
+  stat_smooth(method = lm, se = FALSE) +
+  geom_segment(aes(xend = alcohol, yend = .fitted), color = "red", size = 0.3)
 
+#%% plotting model
 
-
-
-
-
-
-
-
-
-
-
-
-
-## other codes
-df1$new <- log(df1$fixed.acidity)
-hist(df1)
-
-ggplot(df1, aes(new)) +
-  geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
-  stat_function(fun = dnorm, args = list(mean = mean(df1$new, na.rm = T), sd = sd(df1$new, na.rm = T))) + xlab("new (%)")
-
-boxplot(df1$new)
-qqnorm(df1$new)
-ggqqplot(df1$new)
-ggdensity(df1$new, main = "Density plot of Alcohol",xlab = "Alcohol %")
-
-
-
-model <- glm(formula = quality ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = df1)
-model2 <- glm(formula = quality ~ alcohol, data = df1)
+par(mfrow = c(2, 2))
 plot(model)
+
+Anova(model, type = "II")
+acf(model$residuals)

@@ -57,7 +57,7 @@ tr_df1 <-select(tr_df1, -citric.acid)
 tr_df1 <-select(tr_df1, -total.sulfur.dioxide)
 tr_df1 <-select(tr_df1, -density)
 tr_df1 <-select(tr_df1, -sulphates)
-corrplot(cor(tr_df1,method = "spearman
+corrplot(cor(tr_df1,method = "spearman"))
 
 
 corrplot.mixed(cor(tr_df1,method = "spearman"), lower = "number")

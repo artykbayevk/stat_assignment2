@@ -25,7 +25,7 @@ summary(df2)
 summary(df)
 
 ## creating simple dataset for linear regression
-data <- data.frame("alcohol" = df1$ph, "quality" = df1$quality)
+data <- data.frame("alcohol" = df1$alcohol, "quality" = df1$quality)
 
 ## checking normality between this variables
 boxplot(data$alcohol)
@@ -64,12 +64,14 @@ hist(tr_data$quality)
 
 ### quality doesnt need to transform
 tr_data$quality <- data$quality
+tr_data$pH <- data$pH
 
 ks.test(tr_data$alcohol, rnorm(nrow(tr_data)))
 ks.test(tr_data$quality, rnorm(nrow(tr_data)))
 
 ## correlation test
 res <- cor.test(tr_data$quality, tr_data$alcohol, method = "spearman", exact = F)
+res
 res$estimate
 
 res_squared <- res$estimate^2
@@ -98,5 +100,18 @@ ggplot(model.diag.metrics, aes(alcohol, quality)) +
 par(mfrow = c(2, 2))
 plot(model)
 
+# running anova
+anova(model)
+
+#alternative anova testing
+summary(aov(model))
+
+# SSM 236
+# SSR 805
+# SST = 236 + 805
+
+#anothw
 Anova(model, type = "II")
 acf(model$residuals)
+
+

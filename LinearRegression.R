@@ -26,10 +26,15 @@ summary(df)
 
 ## creating simple dataset for linear regression
 data <- data.frame("alcohol" = df1$alcohol, "quality" = df1$quality)
+summary(data)
 
 ## checking normality between this variables
+
 boxplot(data$alcohol)
 boxplot(data$quality)
+boxplot(data$alcohol~data$quality, xlab = "Quality of Red Wine",
+        ylab = "% Alcohol", main = "Alcohol per Quality. Red Wine dataset")
+
 
 # checking normality in alcohol
 qqnorm(data$alcohol)
@@ -41,7 +46,7 @@ hist(data$alcohol)
 qqnorm(data$quality)
 ggqqplot(data$quality)
 ggdensity(data$quality, main = "Density plot of Quality",xlab = "Alcohol %")
-hist(data$quality)
+hist(data$quality, main = "Histogram of Quality",xlab = "Quality")
 
 # transformation data
 tr_data <- sqrt(data)
@@ -54,13 +59,16 @@ boxplot(tr_data$quality)
 qqnorm(tr_data$alcohol)
 ggqqplot(tr_data$alcohol)
 ggdensity(tr_data$alcohol, main = "Density plot of Alcohol",xlab = "Alcohol %")
-hist(tr_data$alcohol)
+hist(tr_data$alcohol, main = "Histogram of transformed(sqrt) Alcohol",xlab = "Alcohol %")
 
 # checking normality in quality on transformed data
 qqnorm(tr_data$quality)
 ggqqplot(tr_data$quality)
 ggdensity(tr_data$quality, main = "Density plot of Quality",xlab = "Alcohol %")
 hist(tr_data$quality)
+
+
+
 
 ### quality doesnt need to transform
 tr_data$quality <- data$quality
@@ -69,7 +77,12 @@ tr_data$pH <- data$pH
 ks.test(tr_data$alcohol, rnorm(nrow(tr_data)))
 ks.test(tr_data$quality, rnorm(nrow(tr_data)))
 
+shapiro.test(tr_data$alcohol)
+shapiro.test(tr_data$quality)
+
+
 ## correlation test
+
 res <- cor.test(tr_data$quality, tr_data$alcohol, method = "spearman", exact = F)
 res
 res$estimate
@@ -78,8 +91,8 @@ res_squared <- res$estimate^2
 res_squared
 
 ## data see that this correlation not so good
-plot(tr_data$quality~tr_data$alcohol)
-
+plot(tr_data$quality~tr_data$alcohol, xlab = "Alcohol", ylab = "Quality",)
+abline(lm(tr_data$quality~tr_data$alcohol))
 # working with the model
 model <- lm(formula = quality ~ alcohol, data = tr_data)
 summary(model)
@@ -106,7 +119,7 @@ anova(model)
 #alternative anova testing
 summary(aov(model))
 
-# SSM 236
+ # SSM 236
 # SSR 805
 # SST = 236 + 805
 

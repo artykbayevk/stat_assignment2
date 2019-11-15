@@ -11,7 +11,8 @@ library("MVN")
 library("perturb")
 library("caret")
 library("olsrr")
-
+library(hrbrthemes)
+library(tidyr)
 #%% reading datasets
 df1 <- read.csv("data/winequality-red.csv", header = TRUE, sep = ";")
 df2 <- read.csv("data/winequality-white.csv", header = TRUE, sep= ';')
@@ -21,6 +22,41 @@ df$class <- c(rep("red", nrow(df1)), rep("white", nrow(df2)))
 summary(df1)
 summary(df2)
 summary(df)
+
+
+
+
+df.gathered_1 <- df1 %>%
+  as_data_frame() %>%
+  select_if(is.numeric) %>%
+  gather(key = "variable", value = "value")
+df.gathered_2 <- df2 %>%
+  as_data_frame() %>%
+  select_if(is.numeric) %>%
+  gather(key = "variable", value = "value")
+
+df.gathered_1$class <- rep("red", nrow(df.gathered_1))
+df.gathered_2$class <- rep("white", nrow(df.gathered_2))
+
+df.gathered <- rbind(df.gathered_1, df.gathered_2)
+
+p <- df.gathered %>%
+  ggplot(aes(x = value, fill=class)) + 
+  # geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 15) +
+  scale_fill_manual(values=c( "#404080", "#69b3a2")) + 
+  facet_wrap(~variable, scales = 'free_x')
+p
+
+p <- d %>%
+  ggplot( aes(x=pH, fill=class)) + 
+  geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
+  scale_fill_manual(values=c( "#404080", "#69b3a2")) +
+  theme_ipsum() +
+  labs(fill="")
+p
+
+
+
 
 ### we know that there are multiple linear regression. 
 # we need to check many assumptions, that have to be done for MLR analysis
@@ -33,10 +69,11 @@ summary(df)
 res<- mvn(df1, univariateTest = "SW", univariatePlot = "histogram")
 res<- mvn(df1, univariateTest = "SW", univariatePlot = "qqplot")
 res<- mvn(df1, univariateTest = "SW", univariatePlot = "scatter")
+res
 
 ## transforming whole dataset
 tr_df1 <- sqrt(df1)
-new_res <- mvn(tr_df1, univariateTest = "SW", univariatePlot = "histogram")
+new_res <- mvn(tr_df1, univariateTest = "SW", univariatePlot = "qqplot")
 
 
 
@@ -70,6 +107,11 @@ vif(full)
 ols_vif_tol(reduced1)
 ols_test_correlation(reduced1)
 ols_coll_diag(reduced1)
+
+ols_vif_tol(reduced2)
+ols_test_correlation(reduced2)
+ols_coll_diag(reduced2)
+
 
 
 ## constructing multiple linear regression
@@ -114,28 +156,28 @@ step(model.null,
 model.final <- lm(formula = quality ~ alcohol + volatile.acidity + pH + chlorides, data = tr_df1)
 summary(model.final)
 
+ols_coll_diag(model.final)
+ols_vif_tol(model.final)
+
 # checking significance of model
 Anova(model.final, type = "II")
 
 ## actual value and predicted values
-tr_df1$pred <- predict(model.final)
+tr_df1$pred <- predict(reduced2)
 plot(pred ~ quality,data=tr_df1,pch = 16,xlab="Actual response value",
      ylab="Predicted response value")
 abline(0,1, col="blue", lwd=2)
 
 ## checking distribution of residuals.
-resid_ <- model.final$residuals
-hist(resid_)
+Residuals <- reduced2$residuals
+hist(Residuals)
 plot(fitted(model.final),residuals(model.final))
 plot(model.final)
 ##A plot of residuals vs. predicted values.  The residuals should be unbiased and homoscedastic.
 
 
-
-
-
-
-
+sum(anova(model.final)[,2])
+anova(model.final)
 
 
 

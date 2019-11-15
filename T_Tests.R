@@ -25,9 +25,7 @@ summary(df1)
 summary(df2)
 summary(df)
 
-data <- data.frame(
-  "quality"=df$quality, "class"=df$class
-)
+data <- data.frame("quality"=df$quality, "class"=df$class)
 
 summary(data)
 print(head(data, n=3))
@@ -36,10 +34,12 @@ print(head(data, n=3))
 
 ## checking normality for red and white wines
 
+
 boxplot(df1$quality)
 qqnorm(df1$quality)
 ggqqplot(df1$quality)
 ggdensity(df1$quality, main = "Density plot of Alcohol",xlab = "Alcohol %")
+hist(df1$quality)
 
 shapiro.test(df1$quality)
 n <- rnorm(10, mean=5, sd=2)
@@ -49,10 +49,21 @@ boxplot(df2$quality)
 qqnorm(df2$quality)
 ggqqplot(df2$quality)
 ggdensity(df2$quality, main = "Density plot of Alcohol",xlab = "Alcohol %")
+hist(df2$quality)
 
 shapiro.test(df2$quality)
 n <- rnorm(10, mean=5, sd=2)
 shapiro.test(n)
+
+
+df1$transformed1 <- sqrt(df1$quality)
+df2$transformed2 <- sqrt(df2$quality)
+hist(df$quality)
+hist(df1$transformed1)
+hist(df2$quality)
+hist(df2$transformed2)
+
+
 
 
 ## and we can assume that variables are not normally distributed.
